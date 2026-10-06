@@ -1,9 +1,9 @@
-# Fantasy Football League Dashboard 2025 Reboot
+# Fantasy Football League Dashboard 2026 Reboot
 
 <br>
 
-### Access the live dashboard [here](https://edenaxe.github.io/FFL-Dash-2025/Output/FFL_Dash.html)
-(Latest Update = Week 14, 12/15/2025)
+### Access the live dashboard [here](https://edenaxe.github.io/FFL-Dash-2026/Output/FFL_Dash.html)
+(Latest Update = Week 4, 10/06/2026)
 
 <br> 
 
