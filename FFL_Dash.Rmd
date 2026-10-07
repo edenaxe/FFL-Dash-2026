@@ -601,23 +601,25 @@ dist_plot <- FFL_Table %>%
   group_by(Week) %>%
   summarize(`Least Points` = round(min(`Points For`), digits = 1),
             `Most Points` = round(max(`Points For`), digits = 1),
-            `Average Points` = round(mean(`Points For`), digits = 1)) %>%
-  mutate(Most_Diff = `Most Points`-`Average Points`,
-         Least_Diff = `Least Points`-`Average Points`,
+            `Median Points` = round(median(`Points For`), digits = 1)) %>%
+  mutate(Most_Diff = `Most Points`-`Median Points`,
+         Least_Diff = `Least Points`-`Median Points`,
          Week = factor(factor(Week, level = paste("Week", 1:16)))) %>%
   ggplot() +
   # Create a segment for average to high
   geom_segment(aes(x = Week, xend = Week, 
-                   y = `Average Points`, yend = `Most Points`),
+                   y = `Median Points`, yend = `Most Points`),
                size = 5, color = "#b6eb60", alpha = 0.3) +
   # Create a segment for average to low
   geom_segment(aes(x = Week, xend = Week, 
-                   y = `Average Points`, yend = `Least Points`),
+                   y = `Median Points`, yend = `Least Points`),
                size = 5, color = "#ebae34", alpha = 0.3) +
   # create a segment to show the average points
   geom_segment(aes(x = Week, xend = Week, 
-                   y = `Average Points`-.5, yend = `Average Points`+.5),
-               size = 5, color = "black") +
+                   y = `Median Points`-.5, yend = `Median Points`+.5),
+               size = 8, color = "grey20") +
+  geom_text(aes(x = Week, y = `Median Points`, label = sprintf("%.1f", `Median Points`)),
+            vjust = -2.2, size = 2.5, colour = "grey20", face = "bold") +
   # Add the weekly points along each segment and color by icon
   geom_point(
     data = FFL_Table %>%
@@ -627,26 +629,16 @@ dist_plot <- FFL_Table %>%
   scale_color_manual(values = c("#eb633d", "#0bb83c")) +
   # Flip the plot axes 
   coord_flip() +
+  labs(title = "Points Distribution + Results",
+       subtitle = "Compared to Weekly Median Points",
+       x = "", y = "Points For") +
   theme_minimal() +
   theme(legend.position = "bottom", 
-        #legend.text = element_text(size = 8)
-        ) +
-  labs(title = "Points Distribution by Week",
-       x = "", y = "Points For")
+        plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5))
+
 
 dist_plot
-
-#ggplotly(dist_plot)
-
-
-#  geom_point(
-#    data = FFL_Table %>%
-#      mutate(Result = ifelse(Win == 1, "Win", "Loss")), 
-#    aes(x = Week, y = `Points For`, color = Team, shape = Result),
-#    size = 3.5, alpha = 0.8) +
-#  scale_color_manual(values = ffl_pal) +
-
-
 
 ```
 
