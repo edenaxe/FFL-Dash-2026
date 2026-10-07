@@ -543,7 +543,7 @@ WI_df %>%
 
 ### Points For vs Projected Points
 
-```{r proj_points, echo=FALSE, warning=FALSE}
+```{r proj_points, echo=FALSE, warning=FALSE, fig.width=10, fig.height=7, out.width="100%"}
 
 cum <- FFL_Table %>%
   mutate(Diff = `Points For` - `Projected Points`) %>%
@@ -554,27 +554,41 @@ cum <- FFL_Table %>%
          NextCum  = lead(CumDiff)) %>%
   ungroup()
 
+team_order <- cum %>%
+  group_by(Team) %>%
+  slice_max(Week, n = 1, with_ties = FALSE) %>%  # each team's most recent week
+  arrange(desc(CumDiff)) %>%                     # highest cumulative diff first
+  pull(Team)
+
+cum <- cum %>% mutate(Team = factor(Team, levels = team_order))
+
 lim <- max(abs(cum$CumDiff), na.rm = TRUE)   # symmetric scale so grey = exactly 0
 
 ggplot(cum, aes(Week, CumDiff)) +
-  geom_hline(yintercept = 0, colour = "grey50") +
+  geom_hline(yintercept = 0, colour = "grey40") +
   # each segment is colored by the average of its two endpoints
   geom_segment(aes(xend = NextWeek, yend = NextCum,
                    colour = (CumDiff + NextCum) / 2),
                linewidth = 1.3, na.rm = TRUE) +
   geom_point(aes(colour = CumDiff), size = 3) +
-  scale_colour_gradient2(low = "#B2182B", mid = "grey85", high = "#1A9850",
+  geom_text(data = cum %>% group_by(Team) %>% slice_max(Week, n = 1, with_ties = FALSE) %>% ungroup(),
+  aes(label = sprintf("%+.1f", CumDiff)),
+  vjust = -1, size = 2.5, colour = "grey20", face = "bold") +
+  scale_colour_gradient2(low = "#eb633d", mid = "#edc77b", high = "#0bb83c",
                          midpoint = 0, limits = c(-lim, lim),
-                         name = "Cumulative\nvs projection") +
+                         name = "Cumulative\nvs Projection") +
   scale_x_discrete(breaks = sort(unique(cum$Week))) +
+  scale_y_continuous(expand = expansion(mult = 0.25)) +
   facet_wrap(~Team) +
   labs(x = "Week", y = "Cumulative Points For − Projected",
        title = "Cumulative Over/Under Performance vs Projections") +
   theme_minimal() +
-theme(
-  axis.text.x = element_text(angle = 45, hjust = 1),
-  strip.text  = element_text(size = 7, face = "bold")
-)
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    strip.text  = element_text(size = 7.5, face = "bold"),
+    plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5)
+  )
 
 ```
 
