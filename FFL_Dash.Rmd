@@ -31,7 +31,7 @@ library(DT)
 library(ggrepel)
 
 # Read in data
-FFL_Table <- read_excel("FFL_Data.xlsx", sheet = "2025 Results") %>%
+FFL_Table <- read_excel("FFL_Data.xlsx", sheet = "2026 Results") %>%
   # Add a win column if points for are greater than points against
   mutate(Win = ifelse(`Points For` > `Points Against`, 1, 0)) %>%
   # Group by team
@@ -42,6 +42,7 @@ FFL_Table <- read_excel("FFL_Data.xlsx", sheet = "2025 Results") %>%
             Week = Week,
             `Points For` = `Points For`,
             `Points Against` = `Points Against`,
+            `Projected Points` = `Projected Points`,
             `Cumulative Points For` = round(cumsum(`Points For`), digits = 1),
             `Cumulative Points Against` = round(cumsum(`Points Against`), digits = 1),
     Image = Image) %>%
@@ -54,6 +55,7 @@ FFL_Table <- read_excel("FFL_Data.xlsx", sheet = "2025 Results") %>%
     `Win Percentage` = 100*(round(Wins/parse_number(Week), digits = 3)),
     `Points For` = `Points For`,
     `Points Against` = `Points Against`,
+    `Projected Points` = `Projected Points`,
     `Cumulative Points For` = `Cumulative Points For`,
     `Cumulative Points Against` = `Cumulative Points Against`,
     Image = Image) %>%
@@ -68,10 +70,10 @@ FFL_Table <- read_excel("FFL_Data.xlsx", sheet = "2025 Results") %>%
 
 # Color palette, variables, etc. (set by alphabetical order)
 ffl_pal <- c(
-  "#F8422A", "#FDB301", "#89BEAA", 
-  "#3E715E", "#E8CAB8", "#074B45", 
-  "#623521", "#327FFF", "#674698",
-  "#C69C6D", "#7C8D51", "#1a23d4" 
+  "#023F7C", "#3E715E", "#FBD856", 
+  "#9E795F", "#EC4230", "#6B999C", 
+  "#4D0C19", "#E26889", "#674698",
+  "#11140F", "#E1AC2B", "#82B9D8" 
 )
 
 current_wk <- paste("Week", max(parse_number(FFL_Table$Week)))
@@ -341,6 +343,11 @@ scatter_df <- FFL_Table %>%
 
 # Find the mid point (average) and create low and high ranges for the plot
 # Range is farthest point (b/w min or max points for/against) plus 10%
+max_PF <- max(scatter_df$`Cumulative Points For`)
+min_PF <- min(scatter_df$`Cumulative Points For`)
+max_PA <- max(scatter_df$`Cumulative Points Against`)
+min_PA <- min(scatter_df$`Cumulative Points Against`)
+  
 mid_pt <- round(mean(scatter_df$`Cumulative Points For`), digits = 0)
 low_range <- mid_pt - round(max(abs(c(max_PF, max_PF, min_PF, min_PA) - mid_pt))*1.1, digits = 0)
 high_range <- mid_pt + round(max(abs(c(max_PF, max_PF, min_PF, min_PA) - mid_pt))*1.1, digits = 0)
@@ -375,7 +382,7 @@ scatter_df %>%
   geom_point(aes(color = quad_col), size = 3) +
   #scale_color_manual(values = c("#b6eb60", "#eb633d", "#ebae34","#0bb83c")) +
   scale_color_identity() +
-  geom_label_repel(aes(color = quad_col), size = 2, fill = "white", 
+  geom_label_repel(aes(color = quad_col), size = 2, fill = "white", max.overlaps = 16, 
                    min.segment.length = unit(0, "lines"), fontface = "bold") +
   scale_y_continuous(limits = c(low_range*0.96, high_range*1.04), 
                      breaks = c(mean(c(mid_pt, low_range*0.96)), mid_pt, mean(c(mid_pt, high_range*1.04))),
@@ -533,6 +540,44 @@ WI_df %>%
 # Extras
 
 ## Row {.tabset}
+
+### Points For vs Projected Points
+
+```{r proj_points, echo=FALSE, warning=FALSE}
+
+cum <- FFL_Table %>%
+  mutate(Diff = `Points For` - `Projected Points`) %>%
+  arrange(Team, Week) %>%
+  group_by(Team) %>%
+  mutate(CumDiff  = cumsum(replace_na(Diff, 0)),
+         NextWeek = lead(Week),
+         NextCum  = lead(CumDiff)) %>%
+  ungroup()
+
+lim <- max(abs(cum$CumDiff), na.rm = TRUE)   # symmetric scale so grey = exactly 0
+
+ggplot(cum, aes(Week, CumDiff)) +
+  geom_hline(yintercept = 0, colour = "grey50") +
+  # each segment is colored by the average of its two endpoints
+  geom_segment(aes(xend = NextWeek, yend = NextCum,
+                   colour = (CumDiff + NextCum) / 2),
+               linewidth = 1.3, na.rm = TRUE) +
+  geom_point(aes(colour = CumDiff), size = 3) +
+  scale_colour_gradient2(low = "#B2182B", mid = "grey85", high = "#1A9850",
+                         midpoint = 0, limits = c(-lim, lim),
+                         name = "Cumulative\nvs projection") +
+  scale_x_discrete(breaks = sort(unique(cum$Week))) +
+  facet_wrap(~Team) +
+  labs(x = "Week", y = "Cumulative Points For − Projected",
+       title = "Cumulative Over/Under Performance vs Projections") +
+  theme_minimal() +
+theme(
+  axis.text.x = element_text(angle = 45, hjust = 1),
+  strip.text  = element_text(size = 7, face = "bold")
+)
+
+```
+
 
 ### Points Distribution 
 
