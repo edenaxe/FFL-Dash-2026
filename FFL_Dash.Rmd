@@ -71,8 +71,8 @@ FFL_Table <- read_excel("FFL_Data.xlsx", sheet = "2026 Results") %>%
 # Color palette, variables, etc. (set by alphabetical order)
 ffl_pal <- c(
   "#023F7C", "#3E715E", "#FBD856", 
-  "#9E795F", "#EC4230", "#6B999C", 
-  "#4D0C19", "#E26889", "#674698",
+  "#9E795F", "#0085CA", "#EC4230",  
+  "#6B999C", "#4D0C19", "#E26889", 
   "#11140F", "#E1AC2B", "#82B9D8" 
 )
 
