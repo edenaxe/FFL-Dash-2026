@@ -554,7 +554,8 @@ WI_df %>%
 ```{r proj_points, echo=FALSE, warning=FALSE, fig.width=10, fig.height=7, out.width="100%"}
 
 cum <- FFL_Table %>%
-  mutate(Diff = `Points For` - `Projected Points`) %>%
+  mutate(Week = readr::parse_number(as.character(Week)),   # "Week 10" -> 10
+         Diff = `Points For` - `Projected Points`) %>%
   arrange(Team, Week) %>%
   group_by(Team) %>%
   mutate(CumDiff  = cumsum(replace_na(Diff, 0)),
@@ -585,16 +586,18 @@ ggplot(cum, aes(Week, CumDiff)) +
   scale_colour_gradient2(low = "#eb633d", mid = "#edc77b", high = "#0bb83c",
                          midpoint = 0, limits = c(-lim, lim),
                          name = "Cumulative\nvs Projection") +
-  scale_x_discrete(breaks = sort(unique(cum$Week))) +
+  scale_x_continuous(breaks = seq(1, max(cum$Week), by = 2), minor_breaks = NULL, 
+                     expand = expansion(add = c(.5, 1))) +
   scale_y_continuous(expand = expansion(mult = 0.25)) +
   facet_wrap(~Team) +
+  theme_minimal() +
   labs(x = "Week", y = "Cumulative Points For − Projected",
        title = "Cumulative Over/Under Performance vs Projections") +
-  theme_minimal() +
   theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
     strip.text  = element_text(size = 7.5, face = "bold"),
     plot.title = element_text(hjust = 0.5),
+    panel.spacing = unit(1.5, "lines"),
     plot.subtitle = element_text(hjust = 0.5)
   )
 
